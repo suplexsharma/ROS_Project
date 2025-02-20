@@ -3,6 +3,7 @@ from rclpy.duration import Duration
 from rclpy.node import Node
 from yasmin import State
 from yasmin import Blackboard
+import time
 
 
 class ConfirmationState(State):
@@ -16,4 +17,6 @@ class ConfirmationState(State):
         gesture = blackboard["gesture"]
         if gesture is None:
             raise RuntimeError("Impossible state: no gesture has been received yet.")
+        self.node.get_logger().info(f"Recognized gesture: {gesture}.")
+        time.sleep(3)
         return "goto_guiding"

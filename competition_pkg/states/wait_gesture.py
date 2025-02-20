@@ -23,7 +23,7 @@ class WaitingForGestureState(MonitorState):
 
     def received_gesture(self, blackboard: Blackboard, gesture: int):
         gesture = Gesture(gesture.data)
-        if gesture == Gesture.NO_GESTURE or gesture == Gesture.THUMB_UP:
+        if gesture == Gesture.NO_GESTURE:
             return "goto_wait_gesture"
         blackboard["gesture"] = gesture
         return "goto_confirm_gesture"

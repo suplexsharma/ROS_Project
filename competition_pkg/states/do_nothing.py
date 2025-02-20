@@ -6,6 +6,7 @@ from yasmin_ros.monitor_state import MonitorState
 from std_msgs.msg import Int32
 from yasmin import Blackboard
 from competition_pkg.gestures import Gesture
+import time
 
 
 class DoNothingState(MonitorState):
@@ -23,5 +24,6 @@ class DoNothingState(MonitorState):
     def received_gesture(self, blackboard: Blackboard, gesture:Int32) -> str:
         gesture = Gesture(gesture.data)
         if gesture == Gesture.THUMB_UP:
+            time.sleep(3)
             return "goto_wait_gesture"
         return "goto_do_nothing"

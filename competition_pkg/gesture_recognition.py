@@ -13,7 +13,7 @@ class ImageRecognition(Node):
         super().__init__("image_recognition")
         self.bridge = CvBridge()
         self.declare_parameter("model_path", None)
-        self.declare_parameter("image_topic", "image")
+        self.declare_parameter("image_topic", "image_raw")
         self.model_path = self.get_parameter("model_path").value
         self.image_topic = self.get_parameter("image_topic").value
         self.gesture_recognizer = GestureRecognizer.load_from_path(self.model_path)

@@ -44,10 +44,10 @@ class StateMachineNode(Node):
         )
 
         sm.add_state(
-            name="DO_NOTHING_STATE",
+            name="ARRIVED_STATE",
             state=DoNothingState(node=self),
             transitions={
-                "goto_do_nothing": "DO_NOTHING_STATE",
+                "goto_do_nothing": "ARRIVED_STATE",
                 "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE"
             }
         )
@@ -56,7 +56,7 @@ class StateMachineNode(Node):
             name="GUIDING_STATE",
             state=GuidingState(node=self, controller=self.controller),
             transitions={
-                "goto_do_nothing": "DO_NOTHING_STATE",
+                "goto_do_nothing": "ARRIVED_STATE",
             }
         )
 

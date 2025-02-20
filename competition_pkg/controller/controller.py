@@ -6,6 +6,7 @@ from sensor_msgs.msg import LaserScan  # type: ignore
 from tf2_ros import TransformException # type: ignore
 from tf2_ros.buffer import Buffer      # type: ignore
 from tf2_ros.transform_listener import TransformListener # type: ignore
+from rclpy.qos import QoSProfile, ReliabilityPolicy
 
 
 
@@ -34,13 +35,15 @@ class Controller(Node):
 		self.timer = self.create_timer(timer_period_sec=0.05, callback=self.timer_callback)
 
 		# Lidar callback for obstacle detection.
-		self.scan_sub = self.create_subscription(msg_type=LaserScan, topic="/scan", callback=self.scan_callback, qos_profile=10)
-		
+		qos_profile = QoSProfile(depth=10)
+		qos_profile.reliability = ReliabilityPolicy.BEST_EFFORT
+		self.scan_sub = self.create_subscription(msg_type=LaserScan, topic="/scan", callback=self.scan_callback, qos_profile=qos_profile)
+
 		# TF2 Initialization.
 		self.tf_buffer = Buffer()
 		self.tf_listener = TransformListener(self.tf_buffer, self)
 
-		# The trajectory to follow description. 
+		# The trajectory to follow description.
 		self.path:list[tuple[float,float]] = []
 		self.final:bool = True
 		self.target_x:float = 0.0
@@ -62,8 +65,8 @@ class Controller(Node):
 	# Return the bot position as (x,y,yaw) or None if unable to get it.
 	def get_position(self) -> tuple[float, float, float] | None:
 		try:
-			trans = self.tf_buffer.lookup_transform('odom', 'base_link', rclpy.time.Time())
-			# trans = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
+			# trans = self.tf_buffer.lookup_transform('odom', 'base_link', rclpy.time.Time())
+			trans = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
 			x = trans.transform.translation.x
 			y = trans.transform.translation.y
 			qx = trans.transform.rotation.x
@@ -102,7 +105,7 @@ class Controller(Node):
 				self.run = False
 				self._tf_failures = 0
 			return
-		
+
 		self._tf_failures = 0
 		x, y, yaw = pos
 		dx = self.target_x - x
@@ -120,28 +123,28 @@ class Controller(Node):
 				self.get_logger().info("Targeting the next point.")
 				self.next_node()
 				return
-		
+
 		target_angle_global = math.atan2(dy, dx)
 		angle_error = target_angle_global - yaw
 		angle_error = math.atan2(math.sin(angle_error), math.cos(angle_error))
-		
+
 		attr_x = math.cos(angle_error)
 		attr_y = math.sin(angle_error)
 
 		final_x = (attr_x * W_ATTRACT) + (self.repulse_x * W_REPULSE)
 		final_y = (attr_y * W_ATTRACT) + (self.repulse_y * W_REPULSE)
 		final_angle = math.atan2(final_y, final_x)
-		
+
 		msg = Twist()
 		msg.angular.z = max(min(1.0 * final_angle, MAX_ANGULAR_VEL), -MAX_ANGULAR_VEL)
-		
+
 		speed_factor = max(0.0, math.cos(final_angle))
-		
+
 		if self.final:
 			target_speed = max(min(0.5 * distance, MAX_LINEAR_VEL), -MAX_LINEAR_VEL)
 		else:
 			target_speed = MAX_LINEAR_VEL
-			
+
 		msg.linear.x = target_speed * speed_factor
 		self.publisher.publish(msg)
 
@@ -149,7 +152,7 @@ class Controller(Node):
 
 	def scan_callback(self, msg: LaserScan) -> None:
 		if not self.run: return
-		
+
 		rep_x = 0.0
 		rep_y = 0.0
 		hit_count = 0
@@ -159,15 +162,15 @@ class Controller(Node):
 			if r < SAFE_DIST:
 				safe_r = max(r, 0.15)
 				force = (SAFE_DIST - safe_r) / (safe_r * safe_r)
-				
+
 				theta = msg.angle_min + i * msg.angle_increment
-				
+
 				rx = -force * math.cos(theta)
 				ry = -force * math.sin(theta)
-				
+
 				tx = ry * TANGENT_WEIGHT
 				ty = -rx * TANGENT_WEIGHT
-				
+
 				rep_x += rx + tx
 				rep_y += ry + ty
 				hit_count += 1

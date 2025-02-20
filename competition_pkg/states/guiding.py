@@ -9,8 +9,8 @@ NAVIGATION_TIMEOUT = 300.0  # seconds before giving up.
 
 
 PATHS = {
-	Gesture.THUMB_UP: [(1, 0), (1, 1)],
-	Gesture.TWO_FINGER: [(0, -1), (1, -1)]
+	Gesture.THUMB_UP: [(1, 1)],
+	Gesture.TWO_FINGER: [(0.5, 1)]
 }
 
 
