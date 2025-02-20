@@ -9,8 +9,8 @@ NAVIGATION_TIMEOUT = 300.0  # seconds before giving up.
 
 
 PATHS = {
-	Gesture.THUMB_UP: [(1, 1)],
-	Gesture.TWO_FINGER: [(0.5, 1)]
+	Gesture.THUMB_UP: [(2, 0.75)],
+	Gesture.TWO_FINGER: [(0.5, 1.0)]
 }
 
 
@@ -24,7 +24,7 @@ class GuidingState(State):
 	def execute(self, blackboard: Blackboard) -> str:
 		self.node.get_logger().info(f"Executing state {self.__class__.__name__}")
 		# get the path
-		self.controller.path = PATHS.get(blackboard["gesture"], [])
+		self.controller.path = list(PATHS.get(blackboard["gesture"], []))
 		self.controller.run = True
 		self.controller.next_node()
 
