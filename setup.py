@@ -4,7 +4,7 @@ import os
 
 package_name = 'competition_pkg'
 
-submodules = [f"{package_name}/states"]
+submodules = [f"{package_name}/competition_pkg/states"]
 
 setup(
     name=package_name,
@@ -25,6 +25,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "statemachine = competition_pkg.statemachine:main",
         ],
     },
 )

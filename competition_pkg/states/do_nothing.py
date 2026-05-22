@@ -9,9 +9,9 @@ class DoNothingState(State):
     """Do nothing state, for debugging purposes"""
 
     def __init__(self, node: Node):
-        super().__init__(outcomes=["do_nothing"])
+        super().__init__(outcomes=["goto_do_nothing"])
         self.node = node
 
     def execute(self, blackboard: Blackboard) -> str:
         self.node.get_logger().info(f"Executing state {self.__class__.__name__}")
-        return "do_nothing"
+        return "goto_do_nothing"
