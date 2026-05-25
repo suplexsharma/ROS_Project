@@ -30,6 +30,11 @@ def generate_launch_description():
                 ]
             ),
             Node(
+                package="yasmin_viewer",
+                executable="yasmin_viewer_node",
+                name="yasmin_viewer"
+            ),
+            Node(
                 package="image_tools",
                 executable="cam2image",
                 name="cam2image",
