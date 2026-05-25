@@ -10,6 +10,15 @@ def generate_launch_description():
                 executable="statemachine",
                 name="statemachine",
                 output="screen"
+            ),
+            Node(
+                package="competition_pkg",
+                executable="gesture_recognition",
+                name="gesture_recognition",
+                output="screen",
+                parameters=[
+                    {"model_path": "src/7_lectures/competition_pkg/models/gesture_recognizer.task"}
+                ]
             )
         ]
     )

@@ -3,23 +3,28 @@ import rclpy
 from rclpy.node import Node
 from cv_bridge import CvBridge, CvBridgeError
 from sensor_msgs.msg import Image
+from std_msgs.msg import String, Int32
 from .gestures import GestureRecognizer
 from pathlib import Path
-
-
-MODEL_PATH = Path("src/7_lectures/competition_pkg/models/gesture_recognizer.task")
 
 
 class ImageRecognition(Node):
     def __init__(self):
         super().__init__("image_recognition")
         self.bridge = CvBridge()
-        self.gesture_recognizer = GestureRecognizer.load_from_path(MODEL_PATH)
+        self.declare_parameter("model_path", None)
+        self.model_path = self.get_parameter("model_path").value
+        self.gesture_recognizer = GestureRecognizer.load_from_path(self.model_path)
         self.image_sub = self.create_subscription(
             msg_type=Image,
             topic="image",
             callback=self.callback,
-            qos_profile=10
+            qos_profile=1
+        )
+        self.gesture_pub = self.create_publisher(
+            msg_type=Int32,
+            topic="gesture",
+            qos_profile=1
         )
 
     def callback(self, msg: Image):
@@ -28,10 +33,11 @@ class ImageRecognition(Node):
         except CvBridgeError as e:
             self.get_logger().error(f"CvBridgeError: {e}")
             return
-        # perform the image processing
-        (rows, cols, channels) = cv_image.shape
+        # get the gesture and publish it
         gesture = self.gesture_recognizer.process_frame(cv_image)
-        print(gesture)
+        message = Int32()
+        message.data = int(gesture)
+        self.gesture_pub.publish(message)
 
 
 
