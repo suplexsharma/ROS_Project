@@ -18,8 +18,10 @@ class GuidingState(State):
 		self.controller.run = True
 		if "robot_path" not in blackboard:
 			self.controller.path = []
+			self.controller.next_node()
 		else:
 			self.controller.path = blackboard["robot_path"]
+			self.controller.next_node()
 			
 		# Wait until the traject is completed.
 		while self.controller.run and rclpy.ok():

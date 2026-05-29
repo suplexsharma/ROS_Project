@@ -19,7 +19,7 @@ class InitialState(State):
 		
 		# On injecte un chemin de test dans le Blackboard.
 		# Exemple : Avancer de 1 mètre, puis aller à gauche (1.0, 1.0)
-		blackboard["robot_path"] = [(1.0, 0.0), (1.0, 1.0)]
+		blackboard["robot_path"] = [(-0.5, -0.5), (-0.5, 0.5), (0.5, 0.5), (-0.5, -0.5)]
 		
 		self.node.get_logger().info("Trajectoire de test chargée, lancement du guidage.")
 		

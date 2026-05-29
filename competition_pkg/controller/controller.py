@@ -8,9 +8,10 @@ from tf2_ros.buffer import Buffer      # type: ignore
 from tf2_ros.transform_listener import TransformListener # type: ignore
 
 
+
 # Controller constants.
-MAX_LINEAR_VEL:float = 0.2    # (m/s) Maximum velocity in a straight line.
-MAX_ANGULAR_VEL:float = 1.0   # (rad/s) Maximum angular velocity.
+MAX_LINEAR_VEL:float = 0.1    # (m/s) Maximum velocity in a straight line.
+MAX_ANGULAR_VEL:float = 0.5   # (rad/s) Maximum angular velocity.
 ACCEPTANCE_RADIUS:float = 0.2 # (m) Radius at which we consider a point to be reached.
 GOAL_TOLERANCE:float = 0.05   # (m) Radius at which we consider the goal to be reached.
 
@@ -56,18 +57,15 @@ class Controller(Node):
 	def timer_callback(self) -> None:
 		if not self.run: return # Guard to stop the controller if its not in use.
 
-		# If there is nothing to do the robot is asked to stop itself.
-		if len(self.path) == 0:
-			self.publisher.publish(Twist())
-			return
-
 		# Get the robot position and distance toward the target.
 		pos = self.get_position()
 		if pos is None: return
 		x, y, yaw = pos
 		dx = self.target_x - x
 		dy = self.target_y - y
-		distance = math.hypot(dx, dy)
+		distance = math.hypot(dx,dy)
+
+		self.get_logger().info("pos:{},{} ; target:{},{}".format(x,y, self.target_x, self.target_y))
 
 		# If the goal is reached, the bot is stopped.
 		if self.final:
@@ -114,7 +112,8 @@ class Controller(Node):
 	# Return the bot position as (x,y,yaw) or None if unable to get it.
 	def get_position(self) -> tuple[float, float, float] | None:
 		try:
-			trans = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
+			trans = self.tf_buffer.lookup_transform('odom', 'base_link', rclpy.time.Time())
+			# trans = self.tf_buffer.lookup_transform('map', 'base_link', rclpy.time.Time())
 			x = trans.transform.translation.x
 			y = trans.transform.translation.y
 			qx = trans.transform.rotation.x
