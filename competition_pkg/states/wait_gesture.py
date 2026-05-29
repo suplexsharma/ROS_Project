@@ -18,11 +18,12 @@ class WaitingForGestureState(MonitorState):
             topic_name="gesture",
             msg_type=Int32,
             monitor_handler=self.received_gesture,
-            outcomes=["goto_do_nothing", "goto_wait_gesture"])
+            outcomes=["goto_confirm_gesture", "goto_wait_gesture"])
         self.node = node
 
     def received_gesture(self, blackboard: Blackboard, gesture: int):
         gesture = Gesture(gesture.data)
         if gesture == Gesture.NO_GESTURE or gesture == Gesture.THUMB_UP:
             return "goto_wait_gesture"
-        return "goto_do_nothing"
+        blackboard["gesture"] = gesture
+        return "goto_confirm_gesture"

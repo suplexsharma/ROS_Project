@@ -3,7 +3,7 @@ from rclpy.node import Node
 from yasmin import StateMachine
 from yasmin_viewer import YasminViewerPub
 
-from .states import InitialState, WaitingForGestureState, DoNothingState
+from .states import *
 
 
 class StateMachineNode(Node):
@@ -26,8 +26,17 @@ class StateMachineNode(Node):
             name="WAITING_FOR_GESTURE_STATE",
             state=WaitingForGestureState(node=self),
             transitions={
-                "goto_do_nothing": "DO_NOTHING_STATE",
+                "goto_confirm_gesture": "CONFIRM_GESTURE_STATE",
                 "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE",
+            }
+        )
+
+        sm.add_state(
+            name="CONFIRM_GESTURE_STATE",
+            state=ConfirmationState(node=self),
+            transitions={
+                "goto_do_nothing": "DO_NOTHING_STATE",
+                "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE"
             }
         )
 
