@@ -52,6 +52,10 @@ class Controller(Node):
 		# Guard to start/stop the autopilot as needed.
 		self.run:bool = False
 
+		# Consecutive TF failures — stops navigation if robot is unavailable.
+		self._tf_failures:int = 0
+		self._TF_FAILURE_LIMIT:int = 20  # ~2 seconds at 10 Hz
+
 
 	# Callback that is used to gives movement commands to the robot to follow a given trajectory.
 	def timer_callback(self) -> None:
@@ -59,7 +63,16 @@ class Controller(Node):
 
 		# Get the robot position and distance toward the target.
 		pos = self.get_position()
-		if pos is None: return
+		if pos is None:
+			self._tf_failures += 1
+			if self._tf_failures >= self._TF_FAILURE_LIMIT:
+				self.get_logger().warn(
+					"Robot TF unavailable — running without a robot? Stopping autopilot."
+				)
+				self.run = False
+				self._tf_failures = 0
+			return
+		self._tf_failures = 0
 		x, y, yaw = pos
 		dx = self.target_x - x
 		dy = self.target_y - y

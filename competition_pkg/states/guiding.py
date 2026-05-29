@@ -4,6 +4,9 @@ from yasmin import Blackboard # type: ignore
 from rclpy.node import Node   # type: ignore
 import rclpy                  # type: ignore
 
+NAVIGATION_TIMEOUT = 30.0  # seconds before giving up (covers no-robot case)
+
+
 class GuidingState(State):
 
 	def __init__(self, node: Node, controller: Node) -> None:
@@ -13,19 +16,24 @@ class GuidingState(State):
 
 	def execute(self, blackboard: Blackboard) -> str:
 		self.node.get_logger().info(f"Executing state {self.__class__.__name__}")
-		
-		# Start the guidance.
+
 		self.controller.run = True
 		if "robot_path" not in blackboard:
 			self.controller.path = []
-			self.controller.next_node()
 		else:
-			self.controller.path = blackboard["robot_path"]
-			self.controller.next_node()
-			
-		# Wait until the traject is completed.
+			self.controller.path = list(blackboard["robot_path"])
+		self.controller.next_node()
+
+		deadline = time.time() + NAVIGATION_TIMEOUT
 		while self.controller.run and rclpy.ok():
+			if time.time() > deadline:
+				self.controller.run = False
+				self.node.get_logger().warn(
+					"Navigation timed out — robot may not be available. "
+					"Returning to gesture wait."
+				)
+				break
 			time.sleep(0.1)
+
 		self.node.get_logger().info("Guidance finished. Transitioning to gesture.")
 		return "goto_wait_gesture"
-	

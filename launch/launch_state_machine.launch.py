@@ -7,10 +7,16 @@ def generate_launch_description():
         [
             Node(
                 package="competition_pkg",
+                executable="gesture_node",
+                name="gesture_node",
+                output="screen"
+            ),
+            Node(
+                package="competition_pkg",
                 executable="statemachine",
                 name="statemachine",
                 output="screen"
-            )
+            ),
         ]
     )
 
