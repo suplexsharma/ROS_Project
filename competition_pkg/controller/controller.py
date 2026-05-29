@@ -17,10 +17,11 @@ GOAL_TOLERANCE:float = 0.05   # (m) Radius at which we consider the goal to be r
 
 # Potential Fields constants.
 W_ATTRACT:float = 1.0         # Attraction weight toward the target.
-W_REPULSE:float = 0.05        # Repulsion weight from obstacles.
-SAFE_DIST:float = 0.5         # (m) Distance at which obstacles start repulsing the bot.
-MAX_REPULSION:float = 10.0    # Maximum repulsion force allowed.
-TANGENT_WEIGHT:float = 0.5    # Tangential force weight to slide along obstacles.
+W_REPULSE:float = 0.5         # Repulsion weight from obstacles.
+SAFE_DIST:float = 0.25        # (m) Distance at which obstacles start repulsing the bot.
+MAX_REPULSION:float = 5.0     # Maximum repulsion force allowed.
+TANGENT_WEIGHT:float = 0.8    # Tangential force weight to slide along obstacles.
+
 
 
 class Controller(Node):
