@@ -6,7 +6,7 @@ from yasmin_viewer import YasminViewerPub
 from rclpy.executors import MultiThreadedExecutor
 
 from .states import InitialState, WaitingForGestureState, DoNothingState, GuidingState
-from controller import Controller
+from .controller import Controller
 
 
 class StateMachineNode(Node):
@@ -15,18 +15,19 @@ class StateMachineNode(Node):
 		self.controller = controller
 
 		# create an instance of the StateMachine class
-		sm = StateMachine(outcomes=["EXIT"])
+		self.sm = StateMachine(outcomes=["EXIT"])
 
 		# add the states to the state machine
-		sm.add_state(
+		self.sm.add_state(
 			name="INITIAL_STATE",
 			state=InitialState(node=self),
 			transitions={
-				"goto_wait_gesture": "WAITING_FOR_GESTURE_STATE",
+				# "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE"
+				"goto_guide": "GUIDING_STATE"
 			}
 		)
 
-		sm.add_state(
+		self.sm.add_state(
 			name="WAITING_FOR_GESTURE_STATE",
 			state=WaitingForGestureState(node=self),
 			transitions={
@@ -34,7 +35,7 @@ class StateMachineNode(Node):
 			}
 		)
 
-		sm.add_state(
+		self.sm.add_state(
 			name="DO_NOTHING_STATE",
 			state=DoNothingState(node=self),
 			transitions={
@@ -42,16 +43,16 @@ class StateMachineNode(Node):
 			}
 		)
 
-		sm.add_state(
+		self.sm.add_state(
 			name="GUIDING_STATE",
 			state=GuidingState(node=self, controller=self.controller),
 			transitions={
-				"goto_gesture": "WAITING_FOR_GESTURE_STATE"
+				"goto_wait_gesture": "WAITING_FOR_GESTURE_STATE"
 			}
 		)
 
 		# Publish state machine information to Yasmin Viewer
-		YasminViewerPub(fsm_name="STATE_MACHINE", fsm=sm)
+		YasminViewerPub(fsm_name="STATE_MACHINE", fsm=self.sm)
 		self.sm_thread = threading.Thread(target=self.run_sm)
 		self.sm_thread.start()
 
