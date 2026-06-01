@@ -10,14 +10,14 @@ import time
 import os
 
 
-class ConfirmationState(State):
-    """Confirms the desired destination"""
+class ArrivedState(State):
+    """Inform the user that the robot arrived"""
 
     def __init__(self, node: Node):
-        super().__init__(outcomes=["goto_do_nothing", "goto_wait_gesture"])
+        super().__init__(outcomes=["goto_wait_gesture"])
         self.node = node
         self.sound_client = SoundClient(node, blocking=True)
-        self.confirm_sound = "src/7_lectures/competition_pkg/sounds/follow_me.wav"
+        self.confirm_sound = "src/7_lectures/competition_pkg/sounds/arrived.wav"
         self.confirm_sound = f"{os.getcwd()}/{self.confirm_sound}"
 
     def execute(self, blackboard: Blackboard) -> str:
@@ -27,4 +27,4 @@ class ConfirmationState(State):
         if not Path(self.confirm_sound).is_file():
             raise RuntimeError("The file does not exist!")
         self.sound_client.playWave(self.confirm_sound, volume=2.0)
-        return "goto_do_nothing"
+        return "goto_wait_gesture"

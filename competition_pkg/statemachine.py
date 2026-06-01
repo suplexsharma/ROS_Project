@@ -41,6 +41,14 @@ class StateMachineNode(Node):
         )
 
         sm.add_state(
+            name="ARRIVED_STATE",
+            state=ArrivedState(node=self),
+            transitions={
+                "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE"
+            }
+        )
+
+        sm.add_state(
             name="DO_NOTHING_STATE",
             state=DoNothingState(node=self),
             transitions={
