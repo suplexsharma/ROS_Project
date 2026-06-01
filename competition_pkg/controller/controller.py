@@ -31,7 +31,7 @@ class Controller(Node):
 
 		# Publisher and timer for the bot control commands.
 		self.publisher = self.create_publisher(msg_type=Twist, topic="cmd_vel", qos_profile=10)
-		self.timer = self.create_timer(timer_period_sec=0.1, callback=self.timer_callback)
+		self.timer = self.create_timer(timer_period_sec=0.05, callback=self.timer_callback)
 
 		# Lidar callback for obstacle detection.
 		self.scan_sub = self.create_subscription(msg_type=LaserScan, topic="/scan", callback=self.scan_callback, qos_profile=10)
@@ -133,7 +133,7 @@ class Controller(Node):
 		final_angle = math.atan2(final_y, final_x)
 		
 		msg = Twist()
-		msg.angular.z = max(min(2.0 * final_angle, MAX_ANGULAR_VEL), -MAX_ANGULAR_VEL)
+		msg.angular.z = max(min(1.0 * final_angle, MAX_ANGULAR_VEL), -MAX_ANGULAR_VEL)
 		
 		speed_factor = max(0.0, math.cos(final_angle))
 		
@@ -182,5 +182,6 @@ class Controller(Node):
 			rep_x *= scale
 			rep_y *= scale
 
-		self.repulse_x = rep_x
-		self.repulse_y = rep_y
+		alpha = 0.8
+		self.repulse_x = alpha * rep_x + (1 - alpha) * self.repulse_x
+		self.repulse_y = alpha * rep_y + (1 - alpha) * self.repulse_y
