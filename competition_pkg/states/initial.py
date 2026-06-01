@@ -15,15 +15,8 @@ class InitialState(State):
 
 	def execute(self, blackboard: Blackboard) -> str:
 
-		self.node.get_logger().info("--- MODE TEST ACTIF ---")
-		
-		# On injecte un chemin de test dans le Blackboard.
-		# Exemple : Avancer de 1 mètre, puis aller à gauche (1.0, 1.0)
+		self.node.get_logger().info("--- TEST ---")
 		blackboard["robot_path"] = [(-0.5, -0.5), (-0.5, 0.5), (0.5, 0.5), (-0.5, -0.5)]
-		
-		self.node.get_logger().info("Trajectoire de test chargée, lancement du guidage.")
-		
-		# On ordonne à YASMIN de passer directement à l'état de guidage
 		return "goto_guide"
 
 

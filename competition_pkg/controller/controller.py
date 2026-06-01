@@ -12,15 +12,15 @@ from tf2_ros.transform_listener import TransformListener # type: ignore
 # Controller constants.
 MAX_LINEAR_VEL:float = 0.1    # (m/s) Maximum velocity in a straight line.
 MAX_ANGULAR_VEL:float = 0.5   # (rad/s) Maximum angular velocity.
-ACCEPTANCE_RADIUS:float = 0.2 # (m) Radius at which we consider a point to be reached.
+ACCEPTANCE_RADIUS:float = 0.1 # (m) Radius at which we consider a point to be reached.
 GOAL_TOLERANCE:float = 0.05   # (m) Radius at which we consider the goal to be reached.
 
 # Potential Fields constants.
 W_ATTRACT:float = 1.0         # Attraction weight toward the target.
-W_REPULSE:float = 0.5         # Repulsion weight from obstacles.
-SAFE_DIST:float = 0.25        # (m) Distance at which obstacles start repulsing the bot.
-MAX_REPULSION:float = 5.0     # Maximum repulsion force allowed.
-TANGENT_WEIGHT:float = 0.8    # Tangential force weight to slide along obstacles.
+W_REPULSE:float = 1.0         # Repulsion weight from obstacles.
+SAFE_DIST:float = 0.5         # (m) Distance at which obstacles start repulsing the bot.
+MAX_REPULSION:float = 3.0     # Maximum repulsion force allowed.
+TANGENT_WEIGHT:float = 0.6    # Tangential force weight to slide along obstacles.
 
 
 
@@ -58,70 +58,6 @@ class Controller(Node):
 		self._TF_FAILURE_LIMIT:int = 20  # ~2 seconds at 10 Hz
 
 
-	# Callback that is used to gives movement commands to the robot to follow a given trajectory.
-	def timer_callback(self) -> None:
-		if not self.run: return # Guard to stop the controller if its not in use.
-
-		# Get the robot position and distance toward the target.
-		pos = self.get_position()
-		if pos is None:
-			self._tf_failures += 1
-			if self._tf_failures >= self._TF_FAILURE_LIMIT:
-				self.get_logger().warn(
-					"Robot TF unavailable — running without a robot? Stopping autopilot."
-				)
-				self.run = False
-				self._tf_failures = 0
-			return
-		self._tf_failures = 0
-		x, y, yaw = pos
-		dx = self.target_x - x
-		dy = self.target_y - y
-		distance = math.hypot(dx,dy)
-
-		self.get_logger().info("pos:{},{} ; target:{},{}".format(x,y, self.target_x, self.target_y))
-
-		# If the goal is reached, the bot is stopped.
-		if self.final:
-			if distance < GOAL_TOLERANCE:
-				self.get_logger().info("Reached final goal.")
-				self.publisher.publish(Twist())
-				self.run = False
-				return
-			
-		# Else if the bot is close enough to the point, set the target to the next trajectory point.
-		else:
-			if distance < ACCEPTANCE_RADIUS:
-				self.get_logger().info("Targetting the next point.")
-				self.next_node()
-				return
-		
-		# Prepare the bot command.
-		target_angle_global = math.atan2(dy, dx)
-		angle_error = target_angle_global - yaw
-		angle_error = math.atan2(math.sin(angle_error), math.cos(angle_error))
-		
-		# Attraction force (unitary vector to prevent being overpowered near the goal).
-		attr_x = math.cos(angle_error)
-		attr_y = math.sin(angle_error)
-
-		# Forces sum and final angle.
-		final_x = (attr_x * W_ATTRACT) + (self.repulse_x * W_REPULSE)
-		final_y = (attr_y * W_ATTRACT) + (self.repulse_y * W_REPULSE)
-		final_angle = math.atan2(final_y, final_x)
-		
-		# Send the command.
-		msg = Twist()
-		msg.angular.z = max(min(2.0 * final_angle, MAX_ANGULAR_VEL), -MAX_ANGULAR_VEL)
-		if abs(final_angle) < 1.0:
-			if self.final:
-				msg.linear.x = max(min(0.5 * distance, MAX_LINEAR_VEL), -MAX_LINEAR_VEL)
-			else:
-				msg.linear.x = MAX_LINEAR_VEL
-		else:
-			msg.linear.x = 0.0
-		self.publisher.publish(msg)
-
 
 	# Return the bot position as (x,y,yaw) or None if unable to get it.
 	def get_position(self) -> tuple[float, float, float] | None:
@@ -154,13 +90,70 @@ class Controller(Node):
 		self.target_y:float = next_point[1]
 
 
-	# Scan the lidar map to detect obstacles and compute repulsion forces.
+
+	def timer_callback(self) -> None:
+		if not self.run: return
+
+		pos = self.get_position()
+		if pos is None:
+			self._tf_failures += 1
+			if self._tf_failures >= self._TF_FAILURE_LIMIT:
+				self.get_logger().warn("Robot TF unavailable — running without a robot? Stopping autopilot.")
+				self.run = False
+				self._tf_failures = 0
+			return
+		
+		self._tf_failures = 0
+		x, y, yaw = pos
+		dx = self.target_x - x
+		dy = self.target_y - y
+		distance = math.hypot(dx, dy)
+
+		if self.final:
+			if distance < GOAL_TOLERANCE:
+				self.get_logger().info("Reached final goal.")
+				self.publisher.publish(Twist())
+				self.run = False
+				return
+		else:
+			if distance < ACCEPTANCE_RADIUS:
+				self.get_logger().info("Targeting the next point.")
+				self.next_node()
+				return
+		
+		target_angle_global = math.atan2(dy, dx)
+		angle_error = target_angle_global - yaw
+		angle_error = math.atan2(math.sin(angle_error), math.cos(angle_error))
+		
+		attr_x = math.cos(angle_error)
+		attr_y = math.sin(angle_error)
+
+		final_x = (attr_x * W_ATTRACT) + (self.repulse_x * W_REPULSE)
+		final_y = (attr_y * W_ATTRACT) + (self.repulse_y * W_REPULSE)
+		final_angle = math.atan2(final_y, final_x)
+		
+		msg = Twist()
+		msg.angular.z = max(min(2.0 * final_angle, MAX_ANGULAR_VEL), -MAX_ANGULAR_VEL)
+		
+		speed_factor = max(0.0, math.cos(final_angle))
+		
+		if self.final:
+			target_speed = max(min(0.5 * distance, MAX_LINEAR_VEL), -MAX_LINEAR_VEL)
+		else:
+			target_speed = MAX_LINEAR_VEL
+			
+		msg.linear.x = target_speed * speed_factor
+		self.publisher.publish(msg)
+
+
+
 	def scan_callback(self, msg: LaserScan) -> None:
 		if not self.run: return
+		
 		rep_x = 0.0
 		rep_y = 0.0
+		hit_count = 0
 
-		# Loop over the Lidar ray to compute the repulsion force.
 		for i, r in enumerate(msg.ranges):
 			if r < 0.05 or r > 10.0 or math.isinf(r) or math.isnan(r): continue
 			if r < SAFE_DIST:
@@ -169,17 +162,20 @@ class Controller(Node):
 				
 				theta = msg.angle_min + i * msg.angle_increment
 				
-				# Repulsion vector.
 				rx = -force * math.cos(theta)
 				ry = -force * math.sin(theta)
 				
-				# Tangential force to slide around the obstacle.
 				tx = ry * TANGENT_WEIGHT
 				ty = -rx * TANGENT_WEIGHT
+				
 				rep_x += rx + tx
 				rep_y += ry + ty
+				hit_count += 1
 
-		# Clamp the total repulsion force so it doesn't completely override attraction.
+		if hit_count > 0:
+			rep_x /= hit_count
+			rep_y /= hit_count
+
 		current_rep_mag = math.hypot(rep_x, rep_y)
 		if current_rep_mag > MAX_REPULSION:
 			scale = MAX_REPULSION / current_rep_mag

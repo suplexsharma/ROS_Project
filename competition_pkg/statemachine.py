@@ -21,7 +21,8 @@ class StateMachineNode(Node):
             name="INITIAL_STATE",
             state=InitialState(node=self),
             transitions={
-                "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE",
+                "goto_guide": "GUIDING_STATE",
+                # "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE",
             }
         )
 

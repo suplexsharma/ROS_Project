@@ -4,7 +4,7 @@ from yasmin import Blackboard # type: ignore
 from rclpy.node import Node   # type: ignore
 import rclpy                  # type: ignore
 
-NAVIGATION_TIMEOUT = 30.0  # seconds before giving up (covers no-robot case)
+NAVIGATION_TIMEOUT = 300.0  # seconds before giving up.
 
 
 class GuidingState(State):
@@ -29,7 +29,7 @@ class GuidingState(State):
 			if time.time() > deadline:
 				self.controller.run = False
 				self.node.get_logger().warn(
-					"Navigation timed out — robot may not be available. "
+					"Navigation timed out : robot may not be available. "
 					"Returning to gesture wait."
 				)
 				break
