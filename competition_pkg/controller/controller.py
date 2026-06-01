@@ -53,9 +53,9 @@ class Controller(Node):
 		# Guard to start/stop the autopilot as needed.
 		self.run:bool = False
 
-		# Consecutive TF failures — stops navigation if robot is unavailable.
+		# Consecutive TF failures. Stops navigation if robot is unavailable.
 		self._tf_failures:int = 0
-		self._TF_FAILURE_LIMIT:int = 20  # ~2 seconds at 10 Hz
+		self._TF_FAILURE_LIMIT:int = 20
 
 
 
