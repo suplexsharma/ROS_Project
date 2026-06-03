@@ -17,7 +17,7 @@ class ImageRecognition(Node):
         self.gesture_recognizer = GestureRecognizer.load_from_path(self.model_path)
         self.image_sub = self.create_subscription(
             msg_type=Image,
-            topic="image",
+            topic="image_raw",
             callback=self.callback,
             qos_profile=1
         )
