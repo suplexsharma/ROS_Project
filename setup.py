@@ -28,6 +28,7 @@ setup(
         'console_scripts': [
             "statemachine = competition_pkg.statemachine:main",
             "gesture_node = competition_pkg.gesture_node:main",
+            "gesture_recognition = competition_pkg.gesture_recognition:main",
         ],
     },
 )

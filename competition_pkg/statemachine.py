@@ -5,9 +5,13 @@ from yasmin import StateMachine
 from yasmin_viewer import YasminViewerPub
 from rclpy.executors import MultiThreadedExecutor
 
+<<<<<<< HEAD
 from competition_pkg.states import InitialState, WaitingForGestureState, DoNothingState, GuidingState
 from competition_pkg.controller import Controller
 from competition_pkg.gesture_node import GestureRecognitionNode
+=======
+from .states import *
+>>>>>>> image_recognition_ros
 
 
 class StateMachineNode(Node):
@@ -30,7 +34,21 @@ class StateMachineNode(Node):
             name="WAITING_FOR_GESTURE_STATE",
             state=WaitingForGestureState(node=self),
             transitions={
+<<<<<<< HEAD
                 "goto_guiding": "GUIDING_STATE"
+=======
+                "goto_confirm_gesture": "CONFIRM_GESTURE_STATE",
+                "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE",
+            }
+        )
+
+        sm.add_state(
+            name="CONFIRM_GESTURE_STATE",
+            state=ConfirmationState(node=self),
+            transitions={
+                "goto_do_nothing": "DO_NOTHING_STATE",
+                "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE"
+>>>>>>> image_recognition_ros
             }
         )
 
@@ -38,7 +56,8 @@ class StateMachineNode(Node):
             name="DO_NOTHING_STATE",
             state=DoNothingState(node=self),
             transitions={
-                "goto_do_nothing": "DO_NOTHING_STATE"
+                "goto_do_nothing": "DO_NOTHING_STATE",
+                "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE"
             }
         )
 

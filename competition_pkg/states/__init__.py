@@ -2,3 +2,4 @@ from .initial import InitialState
 from .do_nothing import DoNothingState
 from .wait_gesture import WaitingForGestureState
 from .guiding import GuidingState
+from .confirmation import ConfirmationState

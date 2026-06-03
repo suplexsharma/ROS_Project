@@ -2,28 +2,23 @@ import time
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-from yasmin import State
+from std_msgs.msg import Int32
+from yasmin_ros.monitor_state import MonitorState
 from yasmin import Blackboard
+from competition_pkg.gestures import Gesture
 
 
-# Adjust these to match your actual map coordinates.
-SAFE_LOCATION: tuple[float, float] = (0.0, 0.0)   # home / safe spot on the map
-
-GESTURE_PATHS: dict[str, list[tuple[float, float]]] = {
-    "Thumb_Up":    [(1.0,  0.0)],          # move forward
-    "Thumb_Down":  [(-1.0, 0.0)],          # move backward
-    "Pointing_Up": [(0.0,  1.0)],          # turn left + forward
-    "Closed_Fist": [(0.0, -1.0)],          # turn right + forward
-    "Victory":     [SAFE_LOCATION],        # two fingers → go to safe location
-    "Open_Palm":   [],                     # idle / stop
-}
-
-
-class WaitingForGestureState(State):
-    """Waits for a gesture on /gesture, then maps it to a waypoint path."""
+class WaitingForGestureState(MonitorState):
+    """Waiting for gesture state.
+    The robot waits for the user to do any gesture.
+    """
 
     def __init__(self, node: Node):
-        super().__init__(outcomes=["goto_guiding"])
+        super().__init__(
+            topic_name="gesture",
+            msg_type=Int32,
+            monitor_handler=self.received_gesture,
+            outcomes=["goto_confirm_gesture", "goto_wait_gesture"])
         self.node = node
         self._gesture: str | None = None
         self._received: bool = False
@@ -36,16 +31,10 @@ class WaitingForGestureState(State):
             self._gesture = msg.data
             self._received = True
 
-    def execute(self, blackboard: Blackboard) -> str:
-        self.node.get_logger().info("Waiting for gesture...")
-        self._received = False
-        self._gesture = None
-
-        while not self._received and rclpy.ok():
-            time.sleep(0.1)
-
-        gesture = self._gesture or ""
-        path = GESTURE_PATHS.get(gesture, [])
-        blackboard["robot_path"] = path
-        self.node.get_logger().info(f"Gesture '{gesture}' → {len(path)} waypoint(s)")
-        return "goto_guiding"
+    def received_gesture(self, blackboard: Blackboard, gesture: int):
+        gesture = Gesture(gesture.data)
+        if gesture == Gesture.NO_GESTURE or gesture == Gesture.THUMB_UP:
+            return "goto_wait_gesture"
+        blackboard["gesture"] = gesture
+        blackboard["robot_path"] = [] # TODO: put the right path for the robot here
+        return "goto_confirm_gesture"
