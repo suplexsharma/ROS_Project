@@ -19,8 +19,8 @@ GOAL_TOLERANCE:float = 0.05   # (m) Radius at which we consider the goal to be r
 W_ATTRACT:float = 1.0         # Attraction weight toward the target.
 W_REPULSE:float = 1.0         # Repulsion weight from obstacles.
 SAFE_DIST:float = 0.5         # (m) Distance at which obstacles start repulsing the bot.
-MAX_REPULSION:float = 3.0     # Maximum repulsion force allowed.
-TANGENT_WEIGHT:float = 0.6    # Tangential force weight to slide along obstacles.
+MAX_REPULSION:float = 2.0     # Maximum repulsion force allowed.
+TANGENT_WEIGHT:float = 1.5    # Tangential force weight to slide along obstacles.
 
 
 
@@ -182,6 +182,6 @@ class Controller(Node):
 			rep_x *= scale
 			rep_y *= scale
 
-		alpha = 0.8
+		alpha = 0.2
 		self.repulse_x = alpha * rep_x + (1 - alpha) * self.repulse_x
 		self.repulse_y = alpha * rep_y + (1 - alpha) * self.repulse_y
