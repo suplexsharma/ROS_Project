@@ -32,7 +32,8 @@ def generate_launch_description():
                 name="gesture_recognition",
                 output="screen",
                 parameters=[
-                    {"model_path": "src/7_lectures/competition_pkg/models/gesture_recognizer.task"}
+                    {"model_path": "src/7_lectures/competition_pkg/models/gesture_recognizer.task"},
+                    {"image_topic": "image"}
                 ]
             ),
             Node(

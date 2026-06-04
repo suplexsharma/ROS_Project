@@ -22,8 +22,7 @@ class StateMachineNode(Node):
             name="INITIAL_STATE",
             state=InitialState(node=self),
             transitions={
-                "goto_guide": "GUIDING_STATE",
-                # "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE",
+                "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE",
             }
         )
 
@@ -31,7 +30,6 @@ class StateMachineNode(Node):
             name="WAITING_FOR_GESTURE_STATE",
             state=WaitingForGestureState(node=self),
             transitions={
-                "goto_guiding": "GUIDING_STATE"
                 "goto_confirm_gesture": "CONFIRM_GESTURE_STATE",
                 "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE",
             }
@@ -41,8 +39,7 @@ class StateMachineNode(Node):
             name="CONFIRM_GESTURE_STATE",
             state=ConfirmationState(node=self),
             transitions={
-                "goto_do_nothing": "DO_NOTHING_STATE",
-                "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE"
+                "goto_guiding": "GUIDING_STATE",
             }
         )
 
@@ -59,7 +56,7 @@ class StateMachineNode(Node):
             name="GUIDING_STATE",
             state=GuidingState(node=self, controller=self.controller),
             transitions={
-                "goto_wait_gesture": "WAITING_FOR_GESTURE_STATE"
+                "goto_do_nothing": "DO_NOTHING_STATE",
             }
         )
 
